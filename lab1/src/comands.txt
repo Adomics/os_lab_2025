@@ -1,0 +1,75 @@
+    1  cd lab0
+    2  mkdir hello
+    3  cd hello
+    4  touch empty
+    5  cd -
+    6  cd hello
+    7  cd -
+    8  cp hello.c empty
+    9  cd src
+   10  cd -
+   11  cp src/hello.c hello/empty
+   12  cd hello
+   13  mv empty newhello.c
+   14  cd -
+   15  cd /workspaces/os_lab_2025
+   16  update.sh
+   17  ./update/sh
+   18  ./update.sh
+   19  ping ya.ru -c 5
+   20  gcc -v
+   21  cd lab0/hello
+   22  gcc newhello.c -o hello_world
+   23  hello_world
+   24  ./hello_world
+   25  cd /workspaces/os_lab_2025
+   26  cd lab0/hello
+   27  touch empty
+   28  cd -
+   29  git add lab0/hello/empty
+   30  git add lab0/hello/newhello.c
+   31  git status
+   32  git commit -m "добавлен hello.c и empty"
+   33  git push
+   34  cd lab1/src
+   35  ./backround.sh &
+   36  ./background.sh &
+   37  cat > ex1.txt
+   38  cat ex1.txt
+   39  clear
+   40  wc -m ex1.txt
+   41  grep "cake" cake_rhymes.txt > with_cake.txt
+   42  rm > /dev/null
+   43  cat > temp.txt
+   44  rm temp.txt > /dev/null
+   45  cat with_cake.txt
+   46  ls -l hello.sh
+   47  chmod +x hello.sh
+   48  ./hello.sh
+   49  touch ex3.sh
+   50  cat > ex3.sh
+   51  lc -l ex3.sh
+   52  ls -l ex3.sh
+   53  chmod +x ex3.sh
+   54  ./ex3.sh
+   55  cat > average.sh
+   56  rm average.sh > /dev/null
+   57  cat > average.sh
+   58  rm average.sh > /dev/null
+   59  cat > average.sh
+   60  od -An -t u4 -N 600 /dev/random > numbers.txt
+   61  wc -m numbers.txt
+   62  rm numbers.txt
+   63  od -An -t u4 -N 600 /dev/random | tr -s ' ' '\n' | grep -v '^$' | head -n 150 > numbers.txt
+   64  wc -m numbers.txt
+   65  cat numbers.txt
+   66  wc -l numbers.txt
+   67  chmod +x average.sh
+   68  numbers.txt | ./average.sh
+   69  numbers.txt > ./average.sh
+   70  ./average.sh numbers.txt
+   71  ./average.sh < numbers.txt
+   72  ls -l average.sh
+   73  ./average.sh < numbers.txt
+   74  history
+   75  history > comands.txt
