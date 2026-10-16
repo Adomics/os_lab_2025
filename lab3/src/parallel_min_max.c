@@ -22,8 +22,6 @@ int main(int argc, char **argv) {
   bool with_files = false;
 
   while (true) {
-    int current_optind = optind ? optind : 1;
-
     static struct option options[] = {{"seed", required_argument, 0, 0},
                                       {"array_size", required_argument, 0, 0},
                                       {"pnum", required_argument, 0, 0},
@@ -40,24 +38,30 @@ int main(int argc, char **argv) {
         switch (option_index) {
           case 0:
             seed = atoi(optarg);
-            // your code here
-            // error handling
+            if (seed <= 0) {
+              printf("seed is a positive number\n");
+              return 1;
+            }
             break;
           case 1:
             array_size = atoi(optarg);
-            // your code here
-            // error handling
+            if (array_size <= 0) {
+              printf("array_size is a positive number\n");
+              return 1;
+            }
             break;
           case 2:
             pnum = atoi(optarg);
-            // your code here
-            // error handling
+            if (pnum <= 0) {
+              printf("pnum is a positive number\n");
+              return 1;
+            }
             break;
           case 3:
             with_files = true;
             break;
 
-          defalut:
+          default:
             printf("Index %d is out of options\n", option_index);
         }
         break;
@@ -84,30 +88,65 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (pnum > array_size) {
+    printf("pnum must not exceed array_size\n");
+    return 1;
+  }
+
   int *array = malloc(sizeof(int) * array_size);
+  if (array == NULL) {
+    perror("malloc");
+    return 1;
+  }
   GenerateArray(array, array_size, seed);
   int active_child_processes = 0;
+
+  int pipes[pnum][2];
+  FILE *files[pnum];
 
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
   for (int i = 0; i < pnum; i++) {
+    if (with_files) {
+      files[i] = tmpfile();
+      if (files[i] == NULL) {
+        perror("tmpfile");
+        return 1;
+      }
+    } else {
+      if (pipe(pipes[i]) == -1) {
+        perror("pipe");
+        return 1;
+      }
+    }
+
     pid_t child_pid = fork();
     if (child_pid >= 0) {
-      // successful fork
       active_child_processes += 1;
       if (child_pid == 0) {
-        // child process
-
-        // parallel somehow
+        int begin = (int)((long long)i * array_size / pnum);
+        int end = (int)((long long)(i + 1) * array_size / pnum);
+        struct MinMax local = GetMinMax(array, begin, end);
 
         if (with_files) {
-          // use files here
+          if (fwrite(&local, sizeof(local), 1, files[i]) != 1) {
+            perror("fwrite");
+            return 1;
+          }
+          fclose(files[i]);
         } else {
-          // use pipe here
+          for (int j = 0; j < i; j++) close(pipes[j][0]);
+          close(pipes[i][0]);
+          if (write(pipes[i][1], &local, sizeof(local)) != (ssize_t)sizeof(local)) {
+            perror("write");
+            return 1;
+          }
+          close(pipes[i][1]);
         }
         return 0;
       }
+      if (!with_files) close(pipes[i][1]);
 
     } else {
       printf("Fork failed!\n");
@@ -116,7 +155,11 @@ int main(int argc, char **argv) {
   }
 
   while (active_child_processes > 0) {
-    // your code here
+    int status;
+    if (wait(&status) == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+      printf("Child process failed!\n");
+      return 1;
+    }
 
     active_child_processes -= 1;
   }
@@ -128,12 +171,25 @@ int main(int argc, char **argv) {
   for (int i = 0; i < pnum; i++) {
     int min = INT_MAX;
     int max = INT_MIN;
+    struct MinMax local;
 
     if (with_files) {
-      // read from files
+      rewind(files[i]);
+      if (fread(&local, sizeof(local), 1, files[i]) != 1) {
+        printf("Cannot read file %d\n", i);
+        return 1;
+      }
+      fclose(files[i]);
     } else {
-      // read from pipes
+      if (read(pipes[i][0], &local, sizeof(local)) != (ssize_t)sizeof(local)) {
+        printf("Cannot read pipe %d\n", i);
+        return 1;
+      }
+      close(pipes[i][0]);
     }
+
+    min = local.min;
+    max = local.max;
 
     if (min < min_max.min) min_max.min = min;
     if (max > min_max.max) min_max.max = max;
