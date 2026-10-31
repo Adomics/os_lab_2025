@@ -1,5 +1,6 @@
 #include "utils.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 void GenerateArray(int *array, unsigned int array_size, unsigned int seed) {
